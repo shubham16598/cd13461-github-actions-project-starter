@@ -1,0 +1,57 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.gitignore'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'LICENSE'
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+env:
+  URL_CHECKER_TIMEOUT: 5000  
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linters
+        run: npm run lint
+
+      - name: Run scripts in script folder
+        run: |
+          for script in script/*; do
+            if [[ -f "$script" && -x "$script" ]]; then
+              echo "Running $script"
+              node "$script"
+            fi
+          done
+        env:
+          URL_CHECKER_TIMEOUT: ${{ env.URL_CHECKER_TIMEOUT }}
