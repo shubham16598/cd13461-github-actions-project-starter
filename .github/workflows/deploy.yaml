@@ -43,15 +43,9 @@ jobs:
         run: npm install
 
       - name: Run linters
-        run: npm run lint
+        run: npm run lint:all
 
-      - name: Run scripts in script folder
-        run: |
-          for script in script/*; do
-            if [[ -f "$script" && -x "$script" ]]; then
-              echo "Running $script"
-              node "$script"
-            fi
-          done
+      - name: Run URL Checker
+        run: node script/url-checker.js -t $URL_CHECKER_TIMEOUT
         env:
           URL_CHECKER_TIMEOUT: ${{ env.URL_CHECKER_TIMEOUT }}
